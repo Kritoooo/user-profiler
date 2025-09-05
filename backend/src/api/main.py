@@ -6,6 +6,9 @@ from typing import List, Dict, Any
 import uvicorn
 import asyncio
 import json
+import signal
+import sys
+from datetime import datetime
 from pathlib import Path
 
 from src.models import CrawlRequest, ActivityResponse, ProfileResponse
@@ -27,10 +30,14 @@ async def lifespan(app: FastAPI):
     logger.info("🚀 Starting User Profiler API server")
     await db_manager.init_db()
     logger.info("✅ Database initialized successfully")
+    
+    # Setup graceful shutdown
+    setup_signal_handlers()
+    
     yield
     # Shutdown
     logger.info("🛑 Shutting down User Profiler API server")
-    await db_manager.close()
+    await graceful_shutdown()
 
 app = FastAPI(
     title="User Profiler API",
@@ -225,6 +232,42 @@ async def get_recent_logs(lines: int = 100):
             }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error reading logs: {str(e)}")
+
+# Graceful shutdown handling
+shutdown_event = asyncio.Event()
+
+def signal_handler(signum, frame):
+    """Handle shutdown signals"""
+    signal_name = signal.Signals(signum).name
+    logger.info(f"🔔 Received {signal_name} signal, initiating graceful shutdown...")
+    shutdown_event.set()
+
+def setup_signal_handlers():
+    """Setup signal handlers for graceful shutdown"""
+    if sys.platform != "win32":
+        signal.signal(signal.SIGTERM, signal_handler)
+        signal.signal(signal.SIGINT, signal_handler)
+        logger.info("📡 Signal handlers configured for graceful shutdown")
+
+async def graceful_shutdown():
+    """Perform graceful shutdown operations"""
+    logger.info("🧹 Starting graceful shutdown sequence...")
+    
+    # Close database connections
+    try:
+        await db_manager.close()
+        logger.info("✅ Database connections closed")
+    except Exception as e:
+        logger.error(f"❌ Error closing database: {e}")
+    
+    # Wait for any background tasks to complete (with timeout)
+    try:
+        await asyncio.wait_for(asyncio.sleep(0.5), timeout=5.0)
+        logger.info("✅ Background tasks completed")
+    except asyncio.TimeoutError:
+        logger.warning("⚠️ Some background tasks may not have completed")
+    
+    logger.info("✅ Graceful shutdown completed")
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)

@@ -83,10 +83,50 @@ echo "Press Ctrl+C to stop both services"
 # Function to cleanup on exit
 cleanup() {
     echo ""
-    echo "🛑 Shutting down services..."
-    kill $BACKEND_PID 2>/dev/null
-    kill $FRONTEND_PID 2>/dev/null
-    echo "✅ Services stopped"
+    echo "🛑 Initiating graceful shutdown..."
+    
+    # Send SIGTERM first for graceful shutdown
+    if [ ! -z "$BACKEND_PID" ] && kill -0 $BACKEND_PID 2>/dev/null; then
+        echo "📡 Sending SIGTERM to backend (PID: $BACKEND_PID)..."
+        kill -TERM $BACKEND_PID 2>/dev/null
+        
+        # Wait up to 10 seconds for graceful shutdown
+        for i in {1..10}; do
+            if ! kill -0 $BACKEND_PID 2>/dev/null; then
+                echo "✅ Backend shut down gracefully"
+                break
+            fi
+            sleep 1
+        done
+        
+        # Force kill if still running
+        if kill -0 $BACKEND_PID 2>/dev/null; then
+            echo "⚠️ Force killing backend..."
+            kill -KILL $BACKEND_PID 2>/dev/null
+        fi
+    fi
+    
+    if [ ! -z "$FRONTEND_PID" ] && kill -0 $FRONTEND_PID 2>/dev/null; then
+        echo "📡 Sending SIGTERM to frontend (PID: $FRONTEND_PID)..."
+        kill -TERM $FRONTEND_PID 2>/dev/null
+        
+        # Wait up to 5 seconds for frontend
+        for i in {1..5}; do
+            if ! kill -0 $FRONTEND_PID 2>/dev/null; then
+                echo "✅ Frontend shut down gracefully"
+                break
+            fi
+            sleep 1
+        done
+        
+        # Force kill if still running
+        if kill -0 $FRONTEND_PID 2>/dev/null; then
+            echo "⚠️ Force killing frontend..."
+            kill -KILL $FRONTEND_PID 2>/dev/null
+        fi
+    fi
+    
+    echo "✅ All services stopped"
     exit 0
 }
 
