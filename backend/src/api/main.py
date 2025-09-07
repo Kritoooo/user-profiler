@@ -262,7 +262,10 @@ async def graceful_shutdown():
     
     # Wait for any background tasks to complete (with timeout)
     try:
-        await asyncio.wait_for(asyncio.sleep(0.5), timeout=5.0)
+        # Gather all running tasks except the current one
+        pending_tasks = [t for t in asyncio.all_tasks() if t is not asyncio.current_task()]
+        if pending_tasks:
+            await asyncio.wait_for(asyncio.gather(*pending_tasks), timeout=5.0)
         logger.info("✅ Background tasks completed")
     except asyncio.TimeoutError:
         logger.warning("⚠️ Some background tasks may not have completed")
