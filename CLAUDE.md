@@ -43,7 +43,7 @@ python test_simple.py
 pytest -v
 ```
 
-### Frontend Development (Vue.js 3)
+### Frontend Development (Next.js)
 ```bash
 cd frontend
 
@@ -94,11 +94,12 @@ The backend uses a modular collector pattern:
   - Async endpoints for crawling, activities, timelines, profiles
   - CORS configured for frontend integration
 
-### Frontend Architecture (Vue.js 3)
-- **Router-based SPA**: Home → Timeline → Profile workflow
-- **`src/services/api.js`**: Centralized API client using Axios
-- **Responsive design**: Tailwind CSS with timeline visualization
-- **Real-time updates**: Background processing status handling
+### Frontend Architecture (Next.js)
+- **App Router**: File-based routing with `src/app/` directory structure
+- **TypeScript**: Full type safety with `src/services/api.ts` centralized API client
+- **API Proxy**: Next.js rewrites `/api/*` to `http://localhost:8000/*` for seamless backend integration
+- **Responsive design**: Tailwind CSS with interactive timeline visualization
+- **Server-Side Rendering**: Next.js SSR capabilities with client-side interactivity
 
 ### Key Design Patterns
 
@@ -170,5 +171,30 @@ playwright install-deps  # May require sudo
 - **Virtual Environment**: Always use `venv` for Python development
 - **Module Resolution**: Backend requires absolute imports from `src/`
 - **Database**: Auto-initializes on startup, no migrations needed
-- **CORS**: Pre-configured for localhost development
-- **Background Tasks**: Crawling runs asynchronously, check logs for progress
+- **API Integration**: Frontend uses Next.js proxy configuration, not CORS
+- **Background Tasks**: Crawling runs asynchronously, monitor via `/logs/stream` endpoint
+
+## Common Issues
+
+### Frontend Loading Problems
+If frontend shows "Loading..." indefinitely after `start_manual.sh`:
+
+1. **Proxy Interference**: System HTTP proxy may block localhost access
+   ```bash
+   # Clear proxy variables
+   unset http_proxy https_proxy
+   # Or export empty values
+   export http_proxy="" https_proxy=""
+   ```
+
+2. **Service Status Check**: Verify both services are running
+   ```bash
+   # Check processes
+   ps aux | grep -E "(uvicorn|next-server)"
+   
+   # Check listening ports
+   ss -tlpn | grep -E ":8000|:3000"
+   
+   # Test API proxy
+   curl http://localhost:3000/api/health
+   ```
