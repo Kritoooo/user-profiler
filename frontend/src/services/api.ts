@@ -124,7 +124,7 @@ export const userApi = {
   },
 
   // Get recent logs
-  getRecentLogs(lines: number = 100): Promise<AxiosResponse<string[]>> {
+  getRecentLogs(lines: number = 100): Promise<AxiosResponse<{ logs: string[] }>> {
     return api.get(`/logs/recent?lines=${lines}`)
   },
 

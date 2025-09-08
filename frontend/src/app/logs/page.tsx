@@ -22,8 +22,7 @@ export default function LogsPage() {
     try {
       const response = await userApi.getRecentLogs(100)
       // Ensure response.data is an array
-      const logsData = Array.isArray(response.data) ? response.data : []
-      setLogs(logsData)
+      setLogs(response.data)
     } catch (error: any) {
       setError(error.response?.data?.detail || 'Error loading logs')
       setLogs([]) // Reset to empty array on error
@@ -42,7 +41,7 @@ export default function LogsPage() {
       
       eventSourceRef.current.onmessage = (event) => {
         const newLog = event.data
-        setLogs(prevLogs => Array.isArray(prevLogs) ? [...prevLogs, newLog] : [newLog])
+        setLogs(prevLogs => [...prevLogs, newLog])
         if (autoRefresh) {
           setTimeout(scrollToBottom, 100)
         }
