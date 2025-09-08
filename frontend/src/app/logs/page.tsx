@@ -21,9 +21,12 @@ export default function LogsPage() {
     
     try {
       const response = await userApi.getRecentLogs(100)
-      setLogs(response.data)
+      // Ensure response.data is an array
+      const logsData = Array.isArray(response.data) ? response.data : []
+      setLogs(logsData)
     } catch (error: any) {
       setError(error.response?.data?.detail || 'Error loading logs')
+      setLogs([]) // Reset to empty array on error
     } finally {
       setLoading(false)
     }
@@ -39,7 +42,7 @@ export default function LogsPage() {
       
       eventSourceRef.current.onmessage = (event) => {
         const newLog = event.data
-        setLogs(prevLogs => [...prevLogs, newLog])
+        setLogs(prevLogs => Array.isArray(prevLogs) ? [...prevLogs, newLog] : [newLog])
         if (autoRefresh) {
           setTimeout(scrollToBottom, 100)
         }
@@ -193,7 +196,7 @@ export default function LogsPage() {
               className="bg-gray-900 rounded-lg p-4 max-h-96 overflow-y-auto"
               style={{ fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace' }}
             >
-              {logs.map((logLine, index) => (
+              {Array.isArray(logs) && logs.map((logLine, index) => (
                 <div key={index} className="text-green-400 text-sm py-0.5">
                   <span className="text-gray-500 mr-2">[{String(index + 1).padStart(4, '0')}]</span>
                   {logLine}
