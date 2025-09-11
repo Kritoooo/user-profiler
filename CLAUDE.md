@@ -5,19 +5,53 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Development Commands
 
 ### Quick Start
+The integrated `start.sh` script provides all functionality in one place:
+
 ```bash
 # System integrity check
-./check_system.sh
+./start.sh --check
 
 # Start full system (auto-detects Docker or manual setup)
 ./start.sh
 
 # Force manual startup with Python venv
-./start_manual.sh
+./start.sh --manual
+
+# Manual startup with live logs
+./start.sh --logs
 
 # Run comprehensive test suite
-./run_tests.sh
+./start.sh --test
+
+# Stop all running services
+./start.sh --stop
+
+# View logs with various options
+./start.sh --view-logs
+./start.sh --view-logs follow     # Live log following
+./start.sh --view-logs recent 50  # Last 50 lines
+./start.sh --view-logs error      # Error logs only
+
+# Get help
+./start.sh --help
 ```
+
+### Integrated Script Features
+The `start.sh` script consolidates the functionality of multiple previous scripts:
+
+| Old Script | New Command | Description |
+|------------|-------------|-------------|
+| `check_system.sh` | `./start.sh --check` | System integrity validation |
+| `start_manual.sh` | `./start.sh --manual` | Force manual Python startup |
+| `start_with_logs.sh` | `./start.sh --logs` | Start with live log monitoring |
+| `run_tests.sh` | `./start.sh --test` | Comprehensive test suite |
+| `stop.sh` | `./start.sh --stop` | Stop all running services |
+| `view_logs.sh` | `./start.sh --view-logs` | Log viewing with multiple options |
+
+**Command Line Options:**
+- Short flags: `-h`, `-c`, `-t`, `-s`, `-m`, `-l`, `-v`
+- Long flags: `--help`, `--check`, `--test`, `--stop`, `--manual`, `--logs`, `--view-logs`
+- Auto-completion friendly with descriptive help text
 
 ### Backend Development (Python + FastAPI)
 ```bash
@@ -43,7 +77,7 @@ python test_simple.py
 pytest -v
 ```
 
-### Frontend Development (Vue.js 3)
+### Frontend Development (Next.js)
 ```bash
 cd frontend
 
@@ -94,11 +128,12 @@ The backend uses a modular collector pattern:
   - Async endpoints for crawling, activities, timelines, profiles
   - CORS configured for frontend integration
 
-### Frontend Architecture (Vue.js 3)
-- **Router-based SPA**: Home → Timeline → Profile workflow
-- **`src/services/api.js`**: Centralized API client using Axios
-- **Responsive design**: Tailwind CSS with timeline visualization
-- **Real-time updates**: Background processing status handling
+### Frontend Architecture (Next.js)
+- **App Router**: File-based routing with `src/app/` directory structure
+- **TypeScript**: Full type safety with `src/services/api.ts` centralized API client
+- **API Proxy**: Next.js rewrites `/api/*` to `http://localhost:8000/*` for seamless backend integration
+- **Responsive design**: Tailwind CSS with interactive timeline visualization
+- **Server-Side Rendering**: Next.js SSR capabilities with client-side interactivity
 
 ### Key Design Patterns
 
@@ -130,10 +165,10 @@ LOG_LEVEL=INFO
 ## Testing Strategy
 
 ### Test Execution Order
-1. **System Check**: `./check_system.sh` - Validates environment
+1. **System Check**: `./start.sh --check` - Validates environment
 2. **Simple Tests**: `backend/test_simple.py` - Core functionality 
 3. **Unit Tests**: `pytest` - Individual components
-4. **Integration Tests**: `./run_tests.sh` - Full system validation
+4. **Integration Tests**: `./start.sh --test` - Full system validation
 
 ### API Testing
 ```bash
@@ -170,5 +205,45 @@ playwright install-deps  # May require sudo
 - **Virtual Environment**: Always use `venv` for Python development
 - **Module Resolution**: Backend requires absolute imports from `src/`
 - **Database**: Auto-initializes on startup, no migrations needed
-- **CORS**: Pre-configured for localhost development
-- **Background Tasks**: Crawling runs asynchronously, check logs for progress
+- **API Integration**: Frontend uses Next.js proxy configuration, not CORS
+- **Background Tasks**: Crawling runs asynchronously, monitor via `/logs/stream` endpoint
+
+## Common Issues
+
+### Frontend Loading Problems
+If frontend shows "Loading..." indefinitely after `./start.sh --manual`:
+
+1. **Proxy Interference**: System HTTP proxy may block localhost access
+   ```bash
+   # Clear proxy variables
+   unset http_proxy https_proxy
+   # Or export empty values
+   export http_proxy="" https_proxy=""
+   ```
+
+2. **Service Status Check**: Verify both services are running
+   ```bash
+   # Check processes
+   ps aux | grep -E "(uvicorn|next-server)"
+   
+   # Check listening ports
+   ss -tlpn | grep -E ":8000|:3000"
+   
+   # Test API proxy
+   curl http://localhost:3000/api/health
+   ```
+
+3. **Quick Troubleshooting**: Use integrated commands
+   ```bash
+   # Stop any existing services
+   ./start.sh --stop
+   
+   # Check system integrity
+   ./start.sh --check
+   
+   # Start with live logs to monitor issues
+   ./start.sh --logs
+   
+   # View error logs if needed
+   ./start.sh --view-logs error
+   ```
