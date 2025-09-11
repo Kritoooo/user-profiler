@@ -5,19 +5,53 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Development Commands
 
 ### Quick Start
+The integrated `start.sh` script provides all functionality in one place:
+
 ```bash
 # System integrity check
-./check_system.sh
+./start.sh --check
 
 # Start full system (auto-detects Docker or manual setup)
 ./start.sh
 
 # Force manual startup with Python venv
-./start_manual.sh
+./start.sh --manual
+
+# Manual startup with live logs
+./start.sh --logs
 
 # Run comprehensive test suite
-./run_tests.sh
+./start.sh --test
+
+# Stop all running services
+./start.sh --stop
+
+# View logs with various options
+./start.sh --view-logs
+./start.sh --view-logs follow     # Live log following
+./start.sh --view-logs recent 50  # Last 50 lines
+./start.sh --view-logs error      # Error logs only
+
+# Get help
+./start.sh --help
 ```
+
+### Integrated Script Features
+The `start.sh` script consolidates the functionality of multiple previous scripts:
+
+| Old Script | New Command | Description |
+|------------|-------------|-------------|
+| `check_system.sh` | `./start.sh --check` | System integrity validation |
+| `start_manual.sh` | `./start.sh --manual` | Force manual Python startup |
+| `start_with_logs.sh` | `./start.sh --logs` | Start with live log monitoring |
+| `run_tests.sh` | `./start.sh --test` | Comprehensive test suite |
+| `stop.sh` | `./start.sh --stop` | Stop all running services |
+| `view_logs.sh` | `./start.sh --view-logs` | Log viewing with multiple options |
+
+**Command Line Options:**
+- Short flags: `-h`, `-c`, `-t`, `-s`, `-m`, `-l`, `-v`
+- Long flags: `--help`, `--check`, `--test`, `--stop`, `--manual`, `--logs`, `--view-logs`
+- Auto-completion friendly with descriptive help text
 
 ### Backend Development (Python + FastAPI)
 ```bash
@@ -131,10 +165,10 @@ LOG_LEVEL=INFO
 ## Testing Strategy
 
 ### Test Execution Order
-1. **System Check**: `./check_system.sh` - Validates environment
+1. **System Check**: `./start.sh --check` - Validates environment
 2. **Simple Tests**: `backend/test_simple.py` - Core functionality 
 3. **Unit Tests**: `pytest` - Individual components
-4. **Integration Tests**: `./run_tests.sh` - Full system validation
+4. **Integration Tests**: `./start.sh --test` - Full system validation
 
 ### API Testing
 ```bash
@@ -177,7 +211,7 @@ playwright install-deps  # May require sudo
 ## Common Issues
 
 ### Frontend Loading Problems
-If frontend shows "Loading..." indefinitely after `start_manual.sh`:
+If frontend shows "Loading..." indefinitely after `./start.sh --manual`:
 
 1. **Proxy Interference**: System HTTP proxy may block localhost access
    ```bash
@@ -197,4 +231,19 @@ If frontend shows "Loading..." indefinitely after `start_manual.sh`:
    
    # Test API proxy
    curl http://localhost:3000/api/health
+   ```
+
+3. **Quick Troubleshooting**: Use integrated commands
+   ```bash
+   # Stop any existing services
+   ./start.sh --stop
+   
+   # Check system integrity
+   ./start.sh --check
+   
+   # Start with live logs to monitor issues
+   ./start.sh --logs
+   
+   # View error logs if needed
+   ./start.sh --view-logs error
    ```
