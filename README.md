@@ -4,84 +4,126 @@ A modular system for tracking and analyzing user digital footprints across multi
 
 ## Architecture
 
-- **Backend**: Python-based system with Crawl4AI for web scraping
-- **Frontend**: Vue.js for timeline visualization
-- **Data Flow**: Web Scraping → LLM Extraction → JSON Storage → Profile Generation
+- **Backend**: Python-based system with FastAPI and async SQLAlchemy
+- **Frontend**: Next.js with TypeScript for timeline visualization
+- **Data Flow**: Web Scraping → LLM Extraction → JSON Storage → Profile Generation → Timeline Visualization
 
 ## Features
 
-- Multi-platform data collection (GitHub, Zhihu, Xiaohongshu, personal blogs)
-- Search engine aggregation (Google, Bing, Baidu)
+- Multi-platform data collection (GitHub, Zhihu, search engines)
+- AI-powered information extraction using OpenAI
 - Timeline-based activity tracking
-- AI-powered information extraction
 - Comprehensive user profiling
+- Responsive web interface with SSR
 
 ## Quick Start
 
-### 🚀 一键启动
+### 🔍 System Check
 ```bash
-# 自动检测环境并启动
+# Validate environment and dependencies
+./start.sh --check
+```
+
+### 🚀 Launch System
+```bash
+# Auto-detect and start (Docker or manual)
 ./start.sh
 
-# 强制手动启动方式
-./start_manual.sh
+# Force manual startup with Python venv
+./start.sh --manual
 
-# 启动并显示实时日志
-./start_with_logs.sh
+# Start with live log monitoring
+./start.sh --logs
 ```
 
-### 🧪 运行测试
+### 🧪 Testing
 ```bash
-./run_tests.sh
+# Run comprehensive test suite
+./start.sh --test
 ```
 
-### 📋 查看日志
+### 📋 Log Management
 ```bash
-# 查看最近日志
-./view_logs.sh
+# View recent logs
+./start.sh --view-logs
 
-# 实时跟踪日志
-./view_logs.sh follow
+# Follow logs in real-time
+./start.sh --view-logs follow
 
-# 查看错误日志
-./view_logs.sh error
+# View last 50 lines
+./start.sh --view-logs recent 50
 
-# 查看特定用户日志
-./view_logs.sh user testuser
+# View error logs only
+./start.sh --view-logs error
 ```
 
-### 📋 手动启动
+### 🛑 Stop Services
+```bash
+./start.sh --stop
+```
 
-#### 后端 (Python + FastAPI)
+## Manual Setup
+
+### Backend (Python + FastAPI + uv)
 ```bash
 cd backend
 
-# 创建虚拟环境
-python3 -m venv venv
-source venv/bin/activate
+# Setup uv environment and dependencies
+uv sync
 
-# 安装依赖
-pip install -r requirements.txt
-
-# 配置环境变量
+# Configure environment
 cp .env.example .env
 
-# 启动API服务
-python -c "from src.api.main import app; import uvicorn; uvicorn.run(app, host='0.0.0.0', port=8000)"
+# Start API server
+uv run python -c "from src.api.main import app; import uvicorn; uvicorn.run(app, host='0.0.0.0', port=8000)"
+
+# Run tests
+uv run pytest -v
 ```
 
-#### 前端 (Vue.js 3)
+### Frontend (Next.js + TypeScript)
 ```bash
 cd frontend
 
-# 安装依赖
+# Install dependencies
 npm install
 
-# 启动开发服务器
+# Start development server
 npm run dev
+
+# Build for production
+npm run build
 ```
 
-#### Docker 方式
+## Configuration
+
+### Environment Variables (backend/.env)
 ```bash
-docker-compose up -d
+OPENAI_API_KEY=your_api_key_here  # Required for LLM features
+DATABASE_URL=sqlite+aiosqlite:///./user_profiler.db
+LOG_LEVEL=INFO
 ```
+
+## API Usage
+
+```bash
+# Health check
+curl http://localhost:8000/health
+
+# Start crawling
+curl -X POST http://localhost:8000/crawl \
+  -H "Content-Type: application/json" \
+  -d '{"user_id": "testuser", "platforms": ["github"]}'
+
+# Get user activities
+curl http://localhost:8000/users/testuser/activities
+
+# Get timeline
+curl http://localhost:8000/users/testuser/timeline
+```
+
+## Access
+
+- **Frontend**: http://localhost:3000
+- **Backend API**: http://localhost:8000
+- **API Documentation**: http://localhost:8000/docs
