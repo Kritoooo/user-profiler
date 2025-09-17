@@ -20,7 +20,7 @@ wheels/
 *.egg
 MANIFEST
 
-# Backend specific
+# Backend specific (Python + uv)
 backend/venv/
 backend/env/
 backend/ENV/
@@ -42,12 +42,14 @@ backend/test-results/
 backend/playwright-report/
 backend/playwright/.cache/
 backend/dist/
+backend/.python-version
 
-# Frontend specific
+# Frontend specific (Next.js)
 frontend/node_modules/
+frontend/.next/
+frontend/out/
 frontend/dist/
 frontend/.tmp/
-frontend/.nuxt/
 frontend/.cache/
 frontend/.parcel-cache/
 frontend/.env
@@ -59,6 +61,8 @@ frontend/logs/
 frontend/coverage/
 frontend/.nyc_output/
 frontend/.eslintcache
+frontend/.turbo/
+frontend/next-env.d.ts
 
 # Global ignores (any directory)
 *.log
