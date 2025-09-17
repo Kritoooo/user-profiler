@@ -15,7 +15,7 @@ show_help() {
     echo ""
     echo "Options:"
     echo "  (no args)            Default startup (Docker or manual detection)"
-    echo "  --manual, -m         Force manual startup with Python venv"
+    echo "  --manual, -m         Force manual startup with uv environment"
     echo "  --logs, -l           Manual startup with live log display"
     echo "  --check, -c          Run system integrity check"
     echo "  --test, -t           Run comprehensive test suite"
@@ -75,7 +75,7 @@ run_system_check() {
     # Check backend files
     echo "🏗️  Checking backend structure..."
     BACKEND_FILES=(
-        "backend/requirements.txt"
+        "backend/pyproject.toml"
         "backend/src/api/main.py"
         "backend/src/models.py"
         "backend/src/config.py"
@@ -128,22 +128,20 @@ run_system_check() {
         fi
     done
     
-    # Check virtual environment
-    echo "🔧 Checking Python virtual environment..."
-    if [ -d "backend/venv" ]; then
-        echo "  ✅ Virtual environment exists"
+    # Check uv environment
+    echo "🔧 Checking Python environment (uv)..."
+    if [ -d "backend/.venv" ]; then
+        echo "  ✅ uv environment exists"
         cd backend
-        source venv/bin/activate
-        if pip list | grep -q fastapi; then
+        if uv run --quiet python -c "import fastapi" 2>/dev/null; then
             echo "  ✅ Dependencies installed"
         else
             echo "  ⚠️  Dependencies not installed"
-            echo "  💡 Run: pip install -r requirements.txt"
+            echo "  💡 Run: uv sync"
         fi
-        deactivate
         cd ..
     else
-        echo "  ⚠️  Virtual environment not created"
+        echo "  ⚠️  uv environment not created"
         echo "  💡 It will be created automatically when starting"
     fi
     
@@ -207,23 +205,20 @@ run_tests() {
     echo "----------------------------"
     cd "$SCRIPT_DIR/backend"
     
-    if [ ! -d "venv" ]; then
-        echo "Creating virtual environment..."
-        python3 -m venv venv
+    if [ ! -d ".venv" ]; then
+        echo "Creating uv environment and installing dependencies..."
+        uv sync > /dev/null 2>&1
+    else
+        echo "Updating dependencies..."
+        uv sync > /dev/null 2>&1
     fi
     
-    echo "Activating virtual environment..."
-    source venv/bin/activate
-    
-    echo "Installing dependencies..."
-    pip install -r requirements.txt > /dev/null 2>&1
-    
     echo "Running simple functionality test..."
-    python test_simple.py
+    uv run python test_simple.py
     
     echo ""
     echo "Running pytest unit tests..."
-    pytest -v --tb=short -x tests/ 2>/dev/null || echo "⚠️  Some unit tests failed (non-critical)"
+    uv run pytest -v --tb=short -x tests/ 2>/dev/null || echo "⚠️  Some unit tests failed (non-critical)"
     
     echo ""
     echo "🧪 Backend test results completed"
@@ -261,7 +256,6 @@ run_tests() {
     else
         # Start backend temporarily for integration test
         cd "$SCRIPT_DIR/backend"
-        source venv/bin/activate
         
         # Find available port (try 8001, 8002, 8003)
         TEST_PORT=""
@@ -278,7 +272,7 @@ run_tests() {
         fi
         
         echo "Starting temporary backend for integration test on port $TEST_PORT..."
-        python -c "from src.api.main import app; import uvicorn; uvicorn.run(app, host='0.0.0.0', port=$TEST_PORT)" &
+        uv run python -c "from src.api.main import app; import uvicorn; uvicorn.run(app, host='0.0.0.0', port=$TEST_PORT)" &
         BACKEND_PID=$!
         
         # Wait for backend to start
@@ -552,26 +546,21 @@ start_manual() {
     echo "🚀 Starting User Profiler System (Manual Mode)"
     echo "=============================================="
     
-    echo "🔧 Starting manually with Python venv..."
+    echo "🔧 Starting manually with uv environment..."
     echo ""
     
     # Backend
     echo "🐍 Setting up Backend..."
     cd "$SCRIPT_DIR/backend"
     
-    # Create virtual environment if it doesn't exist
-    if [ ! -d "venv" ]; then
-        echo "Creating Python virtual environment..."
-        python3 -m venv venv
+    # Create uv environment and install dependencies if needed
+    if [ ! -d ".venv" ]; then
+        echo "Creating uv environment and installing dependencies..."
+        uv sync > /dev/null 2>&1
+    else
+        echo "Updating dependencies..."
+        uv sync > /dev/null 2>&1
     fi
-    
-    # Activate virtual environment
-    echo "Activating virtual environment..."
-    source venv/bin/activate
-    
-    # Install dependencies
-    echo "Installing Python dependencies..."
-    pip install -r requirements.txt > /dev/null 2>&1
     
     # Setup environment file
     if [ ! -f ".env" ]; then
@@ -584,7 +573,7 @@ start_manual() {
     echo "API Documentation: http://localhost:8000/docs"
     
     # Start backend using the same method as in testing
-    python -c "from src.api.main import app; import uvicorn; uvicorn.run(app, host='0.0.0.0', port=8000)" &
+    uv run python -c "from src.api.main import app; import uvicorn; uvicorn.run(app, host='0.0.0.0', port=8000)" &
     BACKEND_PID=$!
     
     # Wait a moment for backend to start
@@ -688,26 +677,21 @@ start_with_logs() {
     echo "🚀 Starting User Profiler System with Live Logs"
     echo "=============================================="
     
-    echo "🔧 Starting manually with Python venv and live logs..."
+    echo "🔧 Starting manually with uv environment and live logs..."
     echo ""
     
     # Backend
     echo "🐍 Setting up Backend..."
     cd "$SCRIPT_DIR/backend"
     
-    # Create virtual environment if it doesn't exist
-    if [ ! -d "venv" ]; then
-        echo "Creating Python virtual environment..."
-        python3 -m venv venv
+    # Create uv environment and install dependencies if needed
+    if [ ! -d ".venv" ]; then
+        echo "Creating uv environment and installing dependencies..."
+        uv sync > /dev/null 2>&1
+    else
+        echo "Updating dependencies..."
+        uv sync > /dev/null 2>&1
     fi
-    
-    # Activate virtual environment
-    echo "Activating virtual environment..."
-    source venv/bin/activate
-    
-    # Install dependencies
-    echo "Installing Python dependencies..."
-    pip install -r requirements.txt > /dev/null 2>&1
     
     # Setup environment file
     if [ ! -f ".env" ]; then
@@ -724,7 +708,7 @@ start_with_logs() {
     echo "Log Stream: http://localhost:8000/logs/recent"
     
     # Start backend
-    python -c "from src.api.main import app; import uvicorn; uvicorn.run(app, host='0.0.0.0', port=8000, log_level='info')" &
+    uv run python -c "from src.api.main import app; import uvicorn; uvicorn.run(app, host='0.0.0.0', port=8000, log_level='info')" &
     BACKEND_PID=$!
     
     # Wait for backend to start

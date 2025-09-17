@@ -57,24 +57,26 @@ The `start.sh` script consolidates the functionality of multiple previous script
 ```bash
 cd backend
 
-# Setup virtual environment (required)
-python3 -m venv venv
-source venv/bin/activate
-
-# Install dependencies
-pip install -r requirements.txt
+# Setup uv environment and install dependencies
+uv sync
 
 # Setup environment
 cp .env.example .env
 
 # Start API server (production method)
-python -c "from src.api.main import app; import uvicorn; uvicorn.run(app, host='0.0.0.0', port=8000)"
+uv run python -c "from src.api.main import app; import uvicorn; uvicorn.run(app, host='0.0.0.0', port=8000)"
 
 # Run simple functionality test
-python test_simple.py
+uv run python test_simple.py
 
 # Run unit tests
-pytest -v
+uv run pytest -v
+
+# Add new dependencies
+uv add package_name
+
+# Update dependencies
+uv sync
 ```
 
 ### Frontend Development (Next.js)
@@ -159,15 +161,16 @@ LOG_LEVEL=INFO
 
 ### Python Import Structure
 - All imports use absolute paths: `from src.module import ...`
-- Virtual environment is required for proper module resolution
+- uv environment is required for proper module resolution
 - Main entry points: `src/api/main.py` (API server), `src/main.py` (CLI)
+- Dependencies managed via `pyproject.toml` and `uv.lock`
 
 ## Testing Strategy
 
 ### Test Execution Order
 1. **System Check**: `./start.sh --check` - Validates environment
-2. **Simple Tests**: `backend/test_simple.py` - Core functionality 
-3. **Unit Tests**: `pytest` - Individual components
+2. **Simple Tests**: `uv run python test_simple.py` - Core functionality 
+3. **Unit Tests**: `uv run pytest` - Individual components
 4. **Integration Tests**: `./start.sh --test` - Full system validation
 
 ### API Testing
@@ -190,9 +193,8 @@ curl http://localhost:8000/users/testuser/timeline
 ### Full Web Scraping (requires system packages)
 ```bash
 cd backend
-source venv/bin/activate
-playwright install
-playwright install-deps  # May require sudo
+uv run playwright install
+uv run playwright install-deps  # May require sudo
 ```
 
 ### LLM Features
@@ -202,7 +204,7 @@ playwright install-deps  # May require sudo
 ## Development Notes
 
 - **Port Usage**: Backend (8000), Frontend (3000)  
-- **Virtual Environment**: Always use `venv` for Python development
+- **Python Environment**: Always use `uv` for Python development and dependency management
 - **Module Resolution**: Backend requires absolute imports from `src/`
 - **Database**: Auto-initializes on startup, no migrations needed
 - **API Integration**: Frontend uses Next.js proxy configuration, not CORS
